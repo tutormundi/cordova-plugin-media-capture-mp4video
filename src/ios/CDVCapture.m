@@ -15,7 +15,18 @@
  KIND, either express or implied.  See the License for the
  specific language governing permissions and limitations
  under the License.
+ 
+ 
+ This plugin converts the captured mov file to a medium quality mp4 file.
+ Modified by R.E. Moore Jr.
+ 07-13-2016
+ 
+ Last revised: 07-13-2016
+ 
+ 
  */
+
+
 
 #import "CDVCapture.h"
 #import "CDVFile.h"
@@ -274,22 +285,21 @@
     }
 }
 
-- (CDVPluginResult*)processVideo:(NSString*)moviePath forCallbackId:(NSString*)callbackId
+/*
+    - (CDVPluginResult*)processVideo:(NSString*)moviePath forCallbackId:(NSString*)callbackId
+*/
+
+- (void)processVideo:(NSString*)moviePath forCallbackId:(NSString*)callbackId
 {
-    // save the movie to photo album (only avail as of iOS 3.1)
-
-    /* don't need, it should automatically get saved
-     NSLog(@"can save %@: %d ?", moviePath, UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(moviePath));
-    if (&UIVideoAtPathIsCompatibleWithSavedPhotosAlbum != NULL && UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(moviePath) == YES) {
-        NSLog(@"try to save movie");
-        UISaveVideoAtPathToSavedPhotosAlbum(moviePath, nil, nil, nil);
-        NSLog(@"finished saving movie");
-    }*/
-    // create MediaFile object
-    NSDictionary* fileDict = [self getMediaDictionaryFromPath:moviePath ofType:nil];
-    NSArray* fileArray = [NSArray arrayWithObject:fileDict];
-
-    return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:fileArray];
+	
+	// create MediaFile object
+	NSDictionary* fileDict = [self getMediaDictionaryFromPath:moviePath ofType:nil];
+	NSArray* fileArray = [NSArray arrayWithObject:fileDict];
+	
+	CDVPluginResult* result = nil;
+	result = [CDVPluginResult  resultWithStatus:CDVCommandStatus_OK messageAsArray:fileArray];
+	
+	[self.commandDelegate sendPluginResult:result callbackId:callbackId];
 }
 
 - (void)getMediaModes:(CDVInvokedUrlCommand*)command
@@ -326,7 +336,7 @@
                 NSDictionary* mov = [NSDictionary dictionaryWithObjectsAndKeys:
                     [NSNumber numberWithInt:0], kW3CMediaFormatHeight,
                     [NSNumber numberWithInt:0], kW3CMediaFormatWidth,
-                    @"video/quicktime", kW3CMediaModeType,
+					@"video/mp4",kW3CMediaModeType,
                     nil];
                 movieArray = [NSArray arrayWithObject:mov];
             }
@@ -476,6 +486,83 @@
     return fileDict;
 }
 
+- (void)conversionFailedOrCanceled:(NSString*)callbackId {
+	CDVPluginResult* result = nil;
+	result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageToErrorObject:CAPTURE_INTERNAL_ERR];
+	[self.commandDelegate sendPluginResult:result callbackId:callbackId];
+};
+
+
+
+
+- (void)convertVideoToMpeg:(NSString*)videoPath withCallbackId:(NSString*)callbackId {
+	// MP4 Conversion using the AVFoundation Framework
+	
+	[self.commandDelegate runInBackground:^{
+
+		// Create the asset url with the video file
+	
+		NSURL *videoURL = [[NSURL alloc] initFileURLWithPath:videoPath];
+	
+		AVURLAsset *avAsset = [AVURLAsset URLAssetWithURL:videoURL options:nil];
+		NSArray *compatiblePresets = [AVAssetExportSession exportPresetsCompatibleWithAsset:avAsset];
+
+		// Check if video is supported for conversion or not
+		if ([compatiblePresets containsObject:AVAssetExportPresetMediumQuality]) {
+			// Create Export session
+			AVAssetExportSession *exportSession = [[AVAssetExportSession alloc]initWithAsset:avAsset presetName:AVAssetExportPresetMediumQuality];
+
+			// Creating temp path to save the converted video
+			
+			// NSString* documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+			// use temp directory
+			
+			NSString* tempDirectory = NSTemporaryDirectory();
+			
+			NSString* myDocumentPath = [tempDirectory stringByAppendingPathComponent:@"capturedVideo.mp4"];
+			NSURL *url = [[NSURL alloc] initFileURLWithPath:myDocumentPath];
+
+			// Check if the file already exists then remove the previous file
+			if ([[NSFileManager defaultManager]fileExistsAtPath:myDocumentPath]) {
+				[[NSFileManager defaultManager]removeItemAtPath:myDocumentPath error:nil];
+			}
+		
+			NSLog(@"Creating export file: %@",myDocumentPath);
+			
+			exportSession.outputURL = url;
+		
+			// Set the output file format, etc.
+			exportSession.outputFileType = AVFileTypeMPEG4;
+			exportSession.shouldOptimizeForNetworkUse = YES;
+		
+			[exportSession exportAsynchronouslyWithCompletionHandler:^{
+			
+				switch ([exportSession status])	{
+					case AVAssetExportSessionStatusFailed:
+						NSLog(@"Video export session failed");
+						[self conversionFailedOrCanceled:callbackId];
+						break;
+					case AVAssetExportSessionStatusCancelled:
+						NSLog(@"Video export canceled");
+						[self conversionFailedOrCanceled:callbackId];
+						break;
+					case AVAssetExportSessionStatusCompleted:
+						//Video conversion finished
+						NSLog(@"Video MPEG compression export successful!");
+						[self processVideo:myDocumentPath forCallbackId:callbackId];
+						break;
+					default:
+						break;
+				}
+			}];
+		}
+		else {
+			NSLog(@"Video file not supported!");
+		}
+	}];
+}
+
+
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingImage:(UIImage*)image editingInfo:(NSDictionary*)editingInfo
 {
     // older api calls new one
@@ -483,14 +570,9 @@
 }
 
 /* Called when image/movie is finished recording.
- * Calls success or error code as appropriate
- * if successful, result  contains an array (with just one entry since can only get one image unless build own camera UI) of MediaFile object representing the image
- *      name
- *      fullPath
- *      type
- *      lastModifiedDate
- *      size
- */
+*  Calls convertToMpeg for quicktime mov to mpeg conversion
+*/
+
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
     CDVImagePicker* cameraPicker = (CDVImagePicker*)picker;
@@ -515,17 +597,19 @@
         // mediaType was image
         result = [self processImage:image type:cameraPicker.mimeType forCallbackId:callbackId];
     } else if ([mediaType isEqualToString:(NSString*)kUTTypeMovie]) {
-        // process video
+		
+		// convert video
         NSString* moviePath = [(NSURL *)[info objectForKey:UIImagePickerControllerMediaURL] path];
         if (moviePath) {
-            result = [self processVideo:moviePath forCallbackId:callbackId];
-        }
+		
+			// convert to MPEG
+			// Note: covertVideoToMpeg will send plugin result within completion block
+			
+			[self convertVideoToMpeg:moviePath withCallbackId:callbackId];
+		}
     }
-    if (!result) {
-        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageToErrorObject:CAPTURE_INTERNAL_ERR];
-    }
-    [self.commandDelegate sendPluginResult:result callbackId:callbackId];
-    pickerController = nil;
+	[[picker presentingViewController] dismissViewControllerAnimated:YES completion:nil];
+	pickerController = nil;
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker
@@ -621,8 +705,7 @@
         microphoneResource = @"CDVCapture.bundle/microphone-568h";
     }
 
-    NSBundle* cdvBundle = [NSBundle bundleForClass:[CDVCapture class]];
-    UIImage* microphone = [UIImage imageNamed:[self resolveImageResource:microphoneResource] inBundle:cdvBundle compatibleWithTraitCollection:nil];
+    UIImage* microphone = [UIImage imageNamed:[self resolveImageResource:microphoneResource]];
     UIView* microphoneView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, viewRect.size.width, microphone.size.height)];
     [microphoneView setBackgroundColor:[UIColor colorWithPatternImage:microphone]];
     [microphoneView setUserInteractionEnabled:NO];
@@ -630,7 +713,7 @@
     [tmp addSubview:microphoneView];
 
     // add bottom bar view
-    UIImage* grayBkg = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/controls_bg"] inBundle:cdvBundle compatibleWithTraitCollection:nil];
+    UIImage* grayBkg = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/controls_bg"]];
     UIView* controls = [[UIView alloc] initWithFrame:CGRectMake(0, microphone.size.height, viewRect.size.width, grayBkg.size.height)];
     [controls setBackgroundColor:[UIColor colorWithPatternImage:grayBkg]];
     [controls setUserInteractionEnabled:NO];
@@ -638,7 +721,7 @@
     [tmp addSubview:controls];
 
     // make red recording background view
-    UIImage* recordingBkg = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/recording_bg"] inBundle:cdvBundle compatibleWithTraitCollection:nil];
+    UIImage* recordingBkg = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/recording_bg"]];
     UIColor* background = [UIColor colorWithPatternImage:recordingBkg];
     self.recordingView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, viewRect.size.width, recordingBkg.size.height)];
     [self.recordingView setBackgroundColor:background];
@@ -666,8 +749,8 @@
 
     // Add record button
 
-    self.recordImage = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/record_button"] inBundle:cdvBundle compatibleWithTraitCollection:nil];
-    self.stopRecordImage = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/stop_button"] inBundle:cdvBundle compatibleWithTraitCollection:nil];
+    self.recordImage = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/record_button"]];
+    self.stopRecordImage = [UIImage imageNamed:[self resolveImageResource:@"CDVCapture.bundle/stop_button"]];
     self.recordButton.accessibilityTraits |= [self accessibilityTraits];
     self.recordButton = [[UIButton alloc] initWithFrame:CGRectMake((viewRect.size.width - recordImage.size.width) / 2, (microphone.size.height + (grayBkg.size.height - recordImage.size.height) / 2), recordImage.size.width, recordImage.size.height)];
     [self.recordButton setAccessibilityLabel:PluginLocalizedString(captureCommand, @"toggle audio recording", nil)];

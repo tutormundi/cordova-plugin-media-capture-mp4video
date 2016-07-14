@@ -15,6 +15,8 @@
        KIND, either express or implied.  See the License for the
        specific language governing permissions and limitations
        under the License.
+
+       Modified by remoorejr to generate mpeg video
 */
 package org.apache.cordova.mediacapture;
 
@@ -27,7 +29,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import android.os.Build;
-import android.os.Bundle;
 
 import org.apache.cordova.file.FileUtils;
 import org.apache.cordova.file.LocalFilesystemURL;
@@ -223,13 +224,9 @@ public class Capture extends CordovaPlugin {
      * Sets up an intent to capture audio.  Result handled by onActivityResult()
      */
     private void captureAudio(Request req) {
-      if (!PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-          PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
-      } else {
-          Intent intent = new Intent(android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION);
+        Intent intent = new Intent(android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION);
 
-          this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
-      }
+        this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
     }
 
     private String getTempDirectoryPath() {
@@ -438,7 +435,7 @@ public class Capture extends CordovaPlugin {
         }
 
         if( data == null){
-            File movie = new File(getTempDirectoryPath(), "Capture.avi");
+            File movie = new File(getTempDirectoryPath(), "Capture.mp4");
             data = Uri.fromFile(movie);
         }
 
@@ -504,7 +501,7 @@ public class Capture extends CordovaPlugin {
                 if (data.toString().contains("/audio/")) {
                     obj.put("type", AUDIO_3GPP);
                 } else {
-                    obj.put("type", VIDEO_3GPP);
+                    obj.put("type", VIDEO_MP4);
                 }
             } else {
                 obj.put("type", FileHelper.getMimeType(Uri.fromFile(fp), cordova));
@@ -607,13 +604,5 @@ public class Capture extends CordovaPlugin {
                 pendingRequests.resolveWithFailure(req, createErrorObject(CAPTURE_PERMISSION_DENIED, "Permission denied."));
             }
         }
-    }
-
-    public Bundle onSaveInstanceState() {
-        return pendingRequests.toBundle();
-    }
-
-    public void onRestoreStateForActivityResult(Bundle state, CallbackContext callbackContext) {
-        pendingRequests.setLastSavedState(state, callbackContext);
     }
 }

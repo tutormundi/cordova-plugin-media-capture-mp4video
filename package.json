@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-media-capture",
-  "version": "1.3.1-dev",
-  "description": "Cordova Media Capture Plugin",
+  "name": "cordova-plugin-media-capture-mp4video",
+  "version": "1.0.0",
+  "description": "Alpha Software's Media Capture MP4 Video Plugin",
   "cordova": {
-    "id": "cordova-plugin-media-capture",
+    "id": "cordova-plugin-media-capture-mp4video",
     "platforms": [
       "android",
       "amazon-fireos",
@@ -18,11 +18,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-media-capture"
+    "url": "https://github.com/remoorejr/cordova-plugin-media-capture-mp4video"
   },
   "keywords": [
     "cordova",
     "media",
+    "mp4 video",
+    "mp4 video capture",
+    "mpeg",
+    "mpeg video capture",
+    "remoorejr",
+    "alpha software",
     "capture",
     "ecosystem:cordova",
     "cordova-android",
@@ -39,7 +45,7 @@
     "test": "npm run jshint",
     "jshint": "jshint www && jshint src && jshint tests"
   },
-  "author": "Apache Software Foundation",
+  "author": "Apache Software Foundation / remoorejr",
   "license": "Apache-2.0",
   "devDependencies": {
     "jshint": "^2.6.0"
