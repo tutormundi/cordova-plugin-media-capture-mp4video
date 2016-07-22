@@ -15,8 +15,6 @@
        KIND, either express or implied.  See the License for the
        specific language governing permissions and limitations
        under the License.
-
-       Modified by remoorejr to generate mpeg video
 */
 package org.apache.cordova.mediacapture;
 
@@ -61,6 +59,7 @@ public class Capture extends CordovaPlugin {
 
     private static final String VIDEO_3GPP = "video/3gpp";
     private static final String VIDEO_MP4 = "video/mp4";
+
     private static final String AUDIO_3GPP = "audio/3gpp";
     private static final String IMAGE_JPEG = "image/jpeg";
 
@@ -181,7 +180,7 @@ public class Capture extends CordovaPlugin {
     /**
      * Get the Image specific attributes
      *
-     * @param filePath path to the file
+     * @param fileUrl url to the file
      * @param obj represents the Media File Data
      * @return a JSONObject that represents the Media File Data
      * @throws JSONException
@@ -291,12 +290,20 @@ public class Capture extends CordovaPlugin {
         if(cameraPermissionInManifest && !PermissionHelper.hasPermission(this, Manifest.permission.CAMERA)) {
             PermissionHelper.requestPermission(this, req.requestCode, Manifest.permission.CAMERA);
         } else {
+
+            File mediaFile = new File(getTempDirectoryPath(),"capturedVideo.mp4");
+
             Intent intent = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
+
+            Uri videoUri = Uri.fromFile(mediaFile);
+
 
             if(Build.VERSION.SDK_INT > 7){
                 intent.putExtra("android.intent.extra.durationLimit", req.duration);
                 intent.putExtra("android.intent.extra.videoQuality", req.quality);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT,videoUri);
             }
+
             this.cordova.startActivityForResult((CordovaPlugin) this, intent, req.requestCode);
         }
     }
@@ -426,21 +433,25 @@ public class Capture extends CordovaPlugin {
         }
     }
 
+
     public void onVideoActivityResult(Request req, Intent intent) {
         Uri data = null;
 
         if (intent != null){
             // Get the uri of the video clip
             data = intent.getData();
+
+            Log.i("Info", "Video captured: " + data);
         }
 
-        if( data == null){
-            File movie = new File(getTempDirectoryPath(), "Capture.mp4");
+        if ( data == null) {
+            File movie = new File(getTempDirectoryPath(), "capturedVideo.mp4");
             data = Uri.fromFile(movie);
+
         }
 
         // create a file object from the uri
-        if(data == null) {
+        if (data == null) {
             pendingRequests.resolveWithFailure(req, createErrorObject(CAPTURE_NO_MEDIA_FILES, "Error: data is null"));
         }
         else {
@@ -497,11 +508,12 @@ public class Capture extends CordovaPlugin {
             // Because of an issue with MimeTypeMap.getMimeTypeFromExtension() all .3gpp files
             // are reported as video/3gpp. I'm doing this hacky check of the URI to see if it
             // is stored in the audio or video content store.
+
             if (fp.getAbsoluteFile().toString().endsWith(".3gp") || fp.getAbsoluteFile().toString().endsWith(".3gpp")) {
                 if (data.toString().contains("/audio/")) {
                     obj.put("type", AUDIO_3GPP);
                 } else {
-                    obj.put("type", VIDEO_MP4);
+                    obj.put("type", VIDEO_3GPP);
                 }
             } else {
                 obj.put("type", FileHelper.getMimeType(Uri.fromFile(fp), cordova));
