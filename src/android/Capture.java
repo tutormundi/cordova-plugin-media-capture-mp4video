@@ -66,7 +66,7 @@ public class Capture extends CordovaPlugin {
     private static final int CAPTURE_AUDIO = 0;     // Constant for capture audio
     private static final int CAPTURE_IMAGE = 1;     // Constant for capture image
     private static final int CAPTURE_VIDEO = 2;     // Constant for capture video
-    private static final String LOG_TAG = "Capture";
+    private static final String LOG_TAG = "Capture_MP4Video";
 
     private static final int CAPTURE_INTERNAL_ERR = 0;
 //    private static final int CAPTURE_APPLICATION_BUSY = 1;
@@ -441,14 +441,18 @@ public class Capture extends CordovaPlugin {
             // Get the uri of the video clip
             data = intent.getData();
 
-            Log.i("Info", "Video captured: " + data);
+            Log.i(LOG_TAG, "Video captured: " + data);
         }
+        
+        // REM: why is this here?
+        /*
 
         if ( data == null) {
             File movie = new File(getTempDirectoryPath(), "capturedVideo.mp4");
             data = Uri.fromFile(movie);
 
         }
+        */
 
         // create a file object from the uri
         if (data == null) {
