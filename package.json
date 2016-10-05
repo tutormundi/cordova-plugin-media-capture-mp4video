@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-media-capture-mp4video",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Alpha Software's Media Capture MP4 Video Plugin",
   "cordova": {
     "id": "cordova-plugin-media-capture-mp4video",

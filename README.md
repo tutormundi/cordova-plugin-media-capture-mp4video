@@ -52,7 +52,6 @@ Although in the global scope, it is not available until after the `deviceready` 
         console.log(navigator.device.capture);
     }
 
-Report issues with this plugin on the [Apache Cordova issue tracker](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20status%20in%20%28Open%2C%20%22In%20Progress%22%2C%20Reopened%29%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20%22Plugin%20Media%20Capture%22%20ORDER%20BY%20priority%20DESC%2C%20summary%20ASC%2C%20updatedDate%20DESC)
 
 ## Installation
 
@@ -153,6 +152,27 @@ code.
     navigator.device.capture.captureAudio(captureSuccess, captureError, {limit:2});
 
 ### iOS Quirks
+
+Since iOS 10 it's mandatory to add a `NSCameraUsageDescription`, `NSMicrophoneUsageDescription` and `NSPhotoLibraryUsageDescriptionentry` in the info.plist.
+
+* `NSCameraUsageDescription` describes the reason that the app accesses the user’s camera.
+* `NSMicrophoneUsageDescription` describes the reason that the app accesses the user’s microphone.
+* `NSPhotoLibraryUsageDescriptionentry` describes the reason the app accesses the user's photo library.
+
+When the system prompts the user to allow access, this string is displayed as part of the dialog box.
+
+To add this entry you can pass the following variables on plugin install.
+
+* `CAMERA_USAGE_DESCRIPTION` for `NSCameraUsageDescription`
+* `MICROPHONE_USAGE_DESCRIPTION` for `NSMicrophoneUsageDescription`
+* `PHOTOLIBRARY_USAGE_DESCRIPTION` for `NSPhotoLibraryUsageDescriptionentry`
+
+-
+Example:
+
+`cordova plugin add cordova-plugin-media-capture-mp4video --variable CAMERA_USAGE_DESCRIPTION="your usage message"`
+
+If you don't pass the variable, the plugin will add an empty string as value.
 
 - iOS does not have a default audio recording application, so a simple user interface is provided.
 
