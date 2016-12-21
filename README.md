@@ -161,18 +161,13 @@ Since iOS 10 it's mandatory to add a `NSCameraUsageDescription`, `NSMicrophoneUs
 
 When the system prompts the user to allow access, this string is displayed as part of the dialog box.
 
-To add this entry you can pass the following variables on plugin install.
+These strings have been hard coded with the following strings to allow the plugin to be used by PhoneGap Build as well as the Cordova CLI:
 
-* `CAMERA_USAGE_DESCRIPTION` for `NSCameraUsageDescription`
-* `MICROPHONE_USAGE_DESCRIPTION` for `NSMicrophoneUsageDescription`
-* `PHOTOLIBRARY_USAGE_DESCRIPTION` for `NSPhotoLibraryUsageDescriptionentry`
+* `NSCameraUsageDescription:` This app requires access to the camera to take photos.
+* `NSMicrophoneUsageDescription:` This app requires access to the microphone to record audio. 
+* `NSPhotoLibraryUsageDescriptionentry:` This app requires access to the photo library to display images.
 
 -
-Example:
-
-`cordova plugin add cordova-plugin-media-capture-mp4video --variable CAMERA_USAGE_DESCRIPTION="your usage message"`
-
-If you don't pass the variable, the plugin will add an empty string as value.
 
 - iOS does not have a default audio recording application, so a simple user interface is provided.
 
