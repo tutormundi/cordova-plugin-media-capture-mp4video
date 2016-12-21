@@ -153,11 +153,11 @@ code.
 
 ### iOS Quirks
 
-Since iOS 10 it's mandatory to add a `NSCameraUsageDescription`, `NSMicrophoneUsageDescription` and `NSPhotoLibraryUsageDescriptionentry` in the info.plist.
+Since iOS 10 it's mandatory to add a `NSCameraUsageDescription`, `NSMicrophoneUsageDescription` and `NSPhotoLibraryUsageDescription` in the info.plist.
 
 * `NSCameraUsageDescription` describes the reason that the app accesses the user’s camera.
 * `NSMicrophoneUsageDescription` describes the reason that the app accesses the user’s microphone.
-* `NSPhotoLibraryUsageDescriptionentry` describes the reason the app accesses the user's photo library.
+* `NSPhotoLibraryUsageDescription` describes the reason the app accesses the user's photo library.
 
 When the system prompts the user to allow access, this string is displayed as part of the dialog box.
 
@@ -165,7 +165,7 @@ These strings have been hard coded with the following strings to allow the plugi
 
 * `NSCameraUsageDescription:` This app requires access to the camera to take photos.
 * `NSMicrophoneUsageDescription:` This app requires access to the microphone to record audio. 
-* `NSPhotoLibraryUsageDescriptionentry:` This app requires access to the photo library to display images.
+* `NSPhotoLibraryUsageDescription:` This app requires access to the photo library to display images.
 
 -
 
