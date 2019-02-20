@@ -55,7 +55,7 @@ Although in the global scope, it is not available until after the `deviceready` 
 
 ## Installation
 
-    cordova plugin add cordova-plugin-media-capture
+    cordova plugin add cordova-plugin-media-capture-mp4video
 
 ## Supported Platforms
 
