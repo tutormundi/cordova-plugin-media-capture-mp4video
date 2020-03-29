@@ -31,7 +31,6 @@
     <keywords>cordova,media,capture</keywords>
     <repo>https://github/remoorejr/cordova-plugin-media-capture-mp4video.git</repo>
 
-    <dependency id="cordova-plugin-file" version="^4.0.0" />
     <dependency id="cordova-plugin-compat" version="^1.0.0" />
 
     <js-module src="www/CaptureAudioOptions.js" name="CaptureAudioOptions">
