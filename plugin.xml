@@ -146,15 +146,15 @@
         <framework src="MobileCoreServices.framework" />
 
         <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
-            <string>This app requires access to the camera to take photos.</string>
+            <string>Show your exercises and solutions.</string>
         </config-file>
 
         <config-file target="*-Info.plist" parent="NSMicrophoneUsageDescription">
-            <string>This app requires access to the microphone to record audio.</string>
+            <string>Record voice messages.</string>
         </config-file>
 
         <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
-            <string>This app requires access to the photo library to display images.</string>
+            <string>Show your exercises and solutions.</string>
         </config-file>
     </platform>
 
